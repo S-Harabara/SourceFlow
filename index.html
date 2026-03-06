@@ -136,21 +136,21 @@
             </div>
         </div>
 
-        <!-- Flat Stats Panel -->
+        <!-- Flat Stats Panel (Global) -->
         <div
-            class="flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            class="flex items-center gap-8 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
             <div class="flex flex-col items-end">
-                <span class="text-[10px] opacity-60">Total Size</span>
+                <span class="opacity-60">Total Selected</span>
                 <span id="totalSizeDisplay" class="text-gray-900 dark:text-white font-mono">0 KB</span>
             </div>
             <div class="flex flex-col items-end">
-                <span class="text-[10px] opacity-60">Files</span>
+                <span class="opacity-60">Selected Files</span>
                 <span id="totalLinesDisplay" class="text-gray-900 dark:text-white font-mono">0</span>
             </div>
             <div class="flex flex-col items-end border-l dark:border-dark-border pl-8">
-                <span class="text-[10px] text-blue-500 opacity-80">Estimated Tokens</span>
+                <span class="text-blue-500 opacity-80">Global Tokens (est)</span>
                 <span id="totalTokensDisplay"
-                    class="text-blue-600 dark:text-blue-400 font-mono text-sm tracking-normal">0</span>
+                    class="text-blue-600 dark:text-blue-400 font-mono tracking-normal">0</span>
             </div>
         </div>
 
@@ -178,6 +178,13 @@
             </div>
 
             <div class="space-y-4">
+                <h3 class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">File Type Filters</h3>
+                <div class="grid grid-cols-2 gap-2" id="fileTypeFilters">
+                    <!-- Filters populated by JS -->
+                </div>
+            </div>
+
+            <div class="space-y-4">
                 <h3 class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Recent Folders</h3>
                 <div id="recentFolders" class="space-y-1 overflow-y-auto no-scrollbar max-h-64">
                     <p class="text-[11px] text-gray-400 italic px-2">No recently used folders</p>
@@ -185,7 +192,7 @@
             </div>
 
             <div class="mt-auto pt-4 border-t dark:border-dark-border">
-                <div class="text-[10px] text-gray-400 text-center font-medium">SourceFlow v1.2</div>
+                <div class="text-[10px] text-gray-400 text-center font-medium">SourceFlow v1.3</div>
             </div>
         </aside>
 
@@ -200,13 +207,15 @@
                         <h2 class="font-bold flex items-center gap-2">
                             <i class="fas fa-sitemap text-blue-500"></i> Explorer
                         </h2>
-                        <div class="flex gap-1">
+                        <div class="flex gap-2">
                             <button id="openAllBtn"
-                                class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-xs"
-                                data-tippy-content="Open All"><i class="fas fa-folder-open"></i></button>
+                                class="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-folder-open"></i> EXPAND ALL
+                            </button>
                             <button id="closeAllBtn"
-                                class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-xs"
-                                data-tippy-content="Close All"><i class="fas fa-folder"></i></button>
+                                class="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-folder"></i> COLLAPSE ALL
+                            </button>
                         </div>
                     </div>
 
@@ -218,13 +227,9 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <button id="selectAllBtn"
+                            <button id="selectAllTextBtn"
                                 class="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-bold flex items-center gap-1">
                                 <i class="fas fa-check-double"></i> Select All Text
-                            </button>
-                            <button id="refreshBtn"
-                                class="hidden text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors font-bold">
-                                <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
 
@@ -254,44 +259,53 @@
                         <h2 class="font-bold flex items-center gap-2">
                             <i class="fas fa-terminal text-emerald-500"></i> Generation
                         </h2>
-                        <div class="flex gap-2">
-                            <button id="copyBtn"
-                                class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg transition-all"
-                                data-tippy-content="Copy Command">
-                                <i class="fas fa-copy text-blue-500"></i>
-                            </button>
-                            <button id="downloadBtn"
-                                class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg transition-all"
-                                data-tippy-content="Download">
-                                <i class="fas fa-download text-indigo-500"></i>
-                            </button>
+
+                        <!-- Preview Stats Tally -->
+                        <div id="previewTally"
+                            class="flex items-center gap-4 text-[10px] font-bold uppercase text-gray-400">
+                            <div class="flex items-center gap-1.5">
+                                <span>Preview:</span>
+                                <span id="previewSize" class="text-emerald-500 font-mono">0 KB</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 border-l dark:border-dark-border pl-4">
+                                <span>Tokens:</span>
+                                <span id="previewTokens" class="text-blue-500 font-mono">0</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="flex gap-4 items-start h-24 shrink-0">
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="includeGoal" class="w-4 h-4 rounded border-gray-300">
-                                <label for="includeGoal" class="text-xs font-bold py-1">Include Project Goal</label>
+                    <div class="flex flex-wrap gap-4 items-start shrink-0">
+                        <div class="flex flex-col gap-2 w-full md:w-[48%]">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="includeGoal" class="w-4 h-4 rounded border-gray-300">
+                                    <label for="includeGoal" class="text-xs font-bold py-1">Include Project Goal</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="includeStructure" class="w-4 h-4 rounded border-gray-300"
+                                        checked>
+                                    <label for="includeStructure" class="text-xs font-bold py-1">Include
+                                        Structure</label>
+                                </div>
                             </div>
                             <textarea id="goalText"
-                                class="hidden w-full bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-[10px] p-2 h-14 outline-none focus:ring-1 focus:ring-blue-500 animate__animated animate__fadeIn"
+                                class="hidden w-full bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-[10px] p-2 h-14 outline-none focus:ring-1 focus:ring-blue-500"
                                 placeholder="What should the AI achieve?"></textarea>
                         </div>
-                        <div class="w-1/2 flex flex-col gap-2">
+                        <div class="w-full md:w-[48%] flex flex-col gap-2">
                             <div class="flex items-center justify-between text-[11px] font-bold">
                                 <div class="flex items-center gap-2"><i
                                         class="fas fa-magic text-yellow-500 scale-75"></i> Transformation</div>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <label
-                                    class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" id="removeComments" class="scale-90">
+                                    class="flex items-center gap-2 p-1.5 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" id="removeComments" class="scale-90 transform-trigger">
                                     <span class="text-[10px] whitespace-nowrap">No Comments</span>
                                 </label>
                                 <label
-                                    class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                                    <input type="checkbox" id="minifyOutput" class="scale-90">
+                                    class="flex items-center gap-2 p-1.5 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <input type="checkbox" id="minifyOutput" class="scale-90 transform-trigger">
                                     <span class="text-[10px] whitespace-nowrap">Minify</span>
                                 </label>
                             </div>
@@ -314,11 +328,21 @@
                             readonly placeholder="Output will appear here..."></textarea>
                     </div>
 
-                    <div class="flex justify-center pt-2">
+                    <div class="flex items-center justify-between gap-4 pt-1">
                         <button id="combineBtn"
-                            class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-4 px-16 rounded-2xl shadow-xl shadow-blue-500/30 transform transition-all active:scale-95 flex items-center gap-3">
+                            class="flex-grow bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-8 rounded-xl shadow-lg shadow-blue-500/20 transform transition-all active:scale-95 flex items-center justify-center gap-3 text-sm">
                             <i class="fas fa-bolt"></i> GENERATE PROMPT
                         </button>
+                        <div class="flex gap-2">
+                            <button id="copyBtn"
+                                class="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl text-xs font-bold transition-all">
+                                <i class="fas fa-copy text-blue-500"></i> COPY
+                            </button>
+                            <button id="downloadBtn"
+                                class="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl text-xs font-bold transition-all">
+                                <i class="fas fa-download text-indigo-500"></i> DOWNLOAD
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -359,7 +383,8 @@
         const explorerCol = document.getElementById('explorerCol'), resizer = document.getElementById('resizer'), sidePanel = document.getElementById('sidePanel'),
             fileTree = document.getElementById('fileTree'), combineBtn = document.getElementById('combineBtn'), combinedOutput = document.getElementById('combinedOutput'),
             totalSizeDisplay = document.getElementById('totalSizeDisplay'), totalTokensDisplay = document.getElementById('totalTokensDisplay'),
-            includeGoal = document.getElementById('includeGoal'), goalText = document.getElementById('goalText');
+            includeGoal = document.getElementById('includeGoal'), goalText = document.getElementById('goalText'), includeStructure = document.getElementById('includeStructure'),
+            previewSize = document.getElementById('previewSize'), previewTokens = document.getElementById('previewTokens');
 
         // Resizer Logic
         let isResizing = false;
@@ -387,15 +412,34 @@
         includeGoal.onchange = () => goalText.classList.toggle('hidden', !includeGoal.checked);
 
         // Files Logic
-        function isText(n) { return ['.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.json', '.md', '.py', '.go', '.rs', '.php', '.rb', '.txt', '.sh', '.yaml', '.yml', '.lock'].some(e => n.endsWith(e)) || ['Makefile', 'Dockerfile'].includes(n); }
+        function isText(n) { return ['.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.json', '.md', '.py', '.go', '.rs', '.php', '.rb', '.txt', '.sh', '.yaml', '.yml', '.lock', '.toml'].some(e => n.toLowerCase().endsWith(e)) || ['Makefile', 'Dockerfile', 'root'].includes(n); }
 
-        async function getTree(h, p = '', c = fileTree) {
+        async function getTree(h, p = '', c = fileTree, isRoot = false) {
             const list = []; for await (const e of h.values()) list.push(e);
             list.sort((a, b) => a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'directory' ? -1 : 1);
+
+            // If it's the root, we create the root node first
+            if (isRoot) {
+                const rootDiv = document.createElement('div');
+                rootDiv.className = 'tree-line mb-1';
+                const row = document.createElement('div'); row.className = 'flex items-center gap-1 hover:bg-gray-200/50 dark:hover:bg-gray-800/20 rounded px-1 transition-colors';
+                const tug = document.createElement('span'); tug.className = 'folder-toggle text-[8px] text-gray-500'; tug.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600'; cb.dataset.path = 'root'; cb.dataset.type = 'dir';
+                const lbl = document.createElement('span'); lbl.className = 'font-bold py-1 cursor-pointer dark:text-gray-300 flex items-center gap-1.5'; lbl.innerHTML = `<i class="fas fa-folder text-blue-500"></i> ${h.name} <span class="text-[9px] text-blue-500 opacity-60">(ROOT)</span>`;
+                const sub = document.createElement('div'); sub.className = 'folder-content tree-indent';
+                const toggle = () => { sub.classList.toggle('collapsed'); tug.classList.toggle('collapsed'); tug.innerHTML = sub.classList.contains('collapsed') ? '<i class="fas fa-chevron-right"></i>' : '<i class="fas fa-chevron-down"></i>'; };
+                tug.onclick = toggle; lbl.onclick = toggle;
+                row.append(tug, cb, lbl); rootDiv.append(row, sub);
+                c.append(rootDiv);
+                c = sub; // Following entries go into root's sub
+            }
+
             for (const e of list) {
                 const ep = p ? `${p}/${e.name}` : e.name;
                 if (ignoreFilter && ignoreFilter.ignores(ep)) continue;
                 const div = document.createElement('div'); div.className = 'tree-line mb-0.5';
+                div.dataset.filename = e.name.toLowerCase();
+
                 if (e.kind === 'directory') {
                     const row = document.createElement('div'); row.className = 'flex items-center gap-1 hover:bg-gray-200/50 dark:hover:bg-gray-800/20 rounded px-1 transition-colors';
                     const tug = document.createElement('span'); tug.className = 'folder-toggle collapsed text-[8px] text-gray-500'; tug.innerHTML = '<i class="fas fa-chevron-right"></i>';
@@ -411,7 +455,7 @@
                     const text = isText(e.name);
                     const fh = await h.getFileHandle(e.name); const f = await fh.getFile();
                     if (text) {
-                        fileHandles.push({ h: fh, p: ep, s: f.size });
+                        fileHandles.push({ h: fh, p: ep, s: f.size, n: e.name });
                         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'w-3 h-3 rounded border-gray-300 dark:border-gray-600'; cb.dataset.path = ep; cb.dataset.type = 'file';
                         row.append(cb);
                     }
@@ -433,62 +477,164 @@
             try {
                 folderHandle = await window.showDirectoryPicker();
                 fileTree.innerHTML = ''; fileHandles = [];
-                ignoreFilter = new GitIgnore('.git\nnode_modules\n.next\ndist');
-                await getTree(folderHandle);
+                ignoreFilter = new GitIgnore('.git\nnode_modules\n.next\ndist\nbuild\nout\n.cache');
+                await getTree(folderHandle, '', fileTree, true);
                 document.getElementById('refreshBtn').classList.remove('hidden');
                 document.getElementById('emptyState').classList.add('hidden');
-                updateRecent(folderHandle.name);
+                saveRecent(folderHandle.name);
             } catch (e) { }
         }
         document.getElementById('folderBtn').onclick = selectFolder;
         document.getElementById('emptyState').onclick = selectFolder;
 
-        function updateRecent(n) {
-            let r = JSON.parse(localStorage.getItem('recent') || '[]');
-            if (!r.includes(n)) { r.unshift(n); if (r.length > 5) r.pop(); localStorage.setItem('recent', JSON.stringify(r)); }
+        function saveRecent(n) {
+            let r = JSON.parse(localStorage.getItem('recent_folders') || '[]');
+            r = r.filter(x => x !== n); r.unshift(n); if (r.length > 8) r.pop();
+            localStorage.setItem('recent_folders', JSON.stringify(r));
+            renderRecent();
+        }
+        function renderRecent() {
+            const r = JSON.parse(localStorage.getItem('recent_folders') || '[]');
             const c = document.getElementById('recentFolders'); c.innerHTML = '';
+            if (!r.length) c.innerHTML = '<p class="text-[11px] text-gray-400 italic px-2">No recently used folders</p>';
             r.forEach(f => {
-                const b = document.createElement('div'); b.className = 'text-[11px] p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer flex items-center gap-2';
+                const b = document.createElement('div'); b.className = 'text-[11px] p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer flex items-center gap-2 overflow-hidden text-ellipsis';
                 b.innerHTML = `<i class="fas fa-history text-gray-400"></i> ${f}`;
+                b.onclick = () => selectFolder(); // Triggers picker again as we can't store handle perms
                 c.append(b);
             });
         }
-        updateRecent(''); // init
+        renderRecent();
 
         fileTree.onchange = (e) => {
             if (e.target.dataset.type === 'dir') {
-                fileTree.querySelectorAll(`input[type="checkbox"][data-path^="${e.target.dataset.path}/"]`).forEach(c => c.checked = e.target.checked);
+                const p = e.target.dataset.path === 'root' ? '' : e.target.dataset.path + '/';
+                fileTree.querySelectorAll(`input[type="checkbox"][data-path^="${p}"]`).forEach(c => c.checked = e.target.checked);
             }
-            let s = 0; fileTree.querySelectorAll('input[type="checkbox"]:checked[data-type="file"]').forEach(cb => {
-                const f = fileHandles.find(x => x.p === cb.dataset.path); if (f) s += f.s;
+            updateGlobalTally();
+        };
+
+        function updateGlobalTally() {
+            let s = 0, count = 0; fileTree.querySelectorAll('input[type="checkbox"]:checked[data-type="file"]').forEach(cb => {
+                const f = fileHandles.find(x => x.p === cb.dataset.path); if (f) { s += f.s; count++; }
             });
             totalSizeDisplay.textContent = (s / 1024).toFixed(1) + ' KB';
             totalTokensDisplay.textContent = Math.ceil(s / 4).toLocaleString();
-            document.getElementById('totalLinesDisplay').textContent = fileTree.querySelectorAll('input[type="checkbox"]:checked[data-type="file"]').length;
+            document.getElementById('totalLinesDisplay').textContent = count;
+        }
+
+        // Live Search
+        document.getElementById('filterInput').oninput = (e) => {
+            const val = e.target.value.toLowerCase();
+            const lines = fileTree.querySelectorAll('.tree-line');
+            lines.forEach(l => {
+                const match = !val || l.dataset.filename?.includes(val);
+                l.style.display = match ? 'block' : 'none';
+                if (match && val) {
+                    let parent = l.parentElement;
+                    while (parent && parent !== fileTree) {
+                        if (parent.classList.contains('folder-content')) {
+                            parent.classList.remove('collapsed');
+                            const toggle = parent.previousElementSibling?.querySelector('.folder-toggle');
+                            if (toggle) { toggle.classList.remove('collapsed'); toggle.innerHTML = '<i class="fas fa-chevron-down"></i>'; }
+                        }
+                        parent = parent.parentElement;
+                    }
+                }
+            });
         };
 
+        // Explorer Controls
+        document.getElementById('openAllBtn').onclick = () => {
+            fileTree.querySelectorAll('.folder-content, .folder-toggle').forEach(el => el.classList.remove('collapsed'));
+            fileTree.querySelectorAll('.folder-toggle').forEach(t => t.innerHTML = '<i class="fas fa-chevron-down"></i>');
+        };
+        document.getElementById('closeAllBtn').onclick = () => {
+            fileTree.querySelectorAll('.folder-content:not(:first-child), .folder-toggle:not(:first-child)').forEach(el => el.classList.add('collapsed'));
+            fileTree.querySelectorAll('.folder-toggle').forEach(t => t.innerHTML = '<i class="fas fa-chevron-right"></i>');
+        };
+        document.getElementById('selectAllTextBtn').onclick = () => {
+            fileTree.querySelectorAll('input[type="checkbox"][data-type="file"]').forEach(cb => cb.checked = true);
+            updateGlobalTally();
+        };
+
+        // File Type Filters
+        const types = ['ts', 'js', 'json', 'md', 'html', 'css', 'py'];
+        const ftContainer = document.getElementById('fileTypeFilters');
+        types.forEach(t => {
+            const b = document.createElement('button');
+            b.className = 'text-[9px] font-bold bg-gray-50 dark:bg-gray-800 py-1.5 rounded-lg border dark:border-dark-border hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors uppercase';
+            b.textContent = t;
+            b.onclick = () => {
+                fileTree.querySelectorAll('input[type="checkbox"][data-type="file"]').forEach(cb => {
+                    if (cb.dataset.path.toLowerCase().endsWith('.' + t) || (t === 'ts' && cb.dataset.path.toLowerCase().endsWith('.tsx'))) cb.checked = true;
+                });
+                updateGlobalTally();
+                showGlobalMessage(`Selected all ${t.toUpperCase()} files`, 'success');
+            };
+            ftContainer.append(b);
+        });
+
+        // Generation logic
         const minifyJS = s => s.replace(/\s+/g, ' ').replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').trim();
         const cleanComments = s => s.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
 
+        function getProjectStructure() {
+            let res = "PROJECT STRUCTURE:\n";
+            const items = fileTree.querySelectorAll('.tree-line');
+            items.forEach(it => {
+                let depth = 0; let p = it.parentElement; while (p && p !== fileTree) { if (p.classList.contains('folder-content')) depth++; p = p.parentElement; }
+                const isDir = it.querySelector('input')?.dataset.type === 'dir';
+                const name = it.querySelector('span:last-child').textContent.split('(')[0].trim().replace('ROOT', '').trim();
+                res += "  ".repeat(depth) + (isDir ? "📁 " : "📄 ") + name + "\n";
+            });
+            return res + "\n";
+        }
+
         combineBtn.onclick = async () => {
             const list = Array.from(fileTree.querySelectorAll('input[type="checkbox"]:checked[data-type="file"]')).map(cb => cb.dataset.path);
-            if (!list.length) return;
+            if (!list.length && !includeStructure.checked) return showGlobalMessage('Select files first');
+
             document.getElementById('loadingIndicator').classList.remove('hidden');
             let res = '';
             if (includeGoal.checked) res += `GOAL:\n${goalText.value}\n\n`;
+            if (includeStructure.checked) res += getProjectStructure();
+
             for (const p of list) {
                 const f = await (await fileHandles.find(x => x.p === p).h.getFile()).text();
                 let txt = f;
                 if (document.getElementById('removeComments').checked) txt = cleanComments(txt);
                 if (document.getElementById('minifyOutput').checked) txt = minifyJS(txt);
-                res += `--- ${p} ---\n${txt}\n\n`;
+                res += `--- FILE: ${p} ---\n${txt}\n\n`;
             }
             combinedOutput.value = res.trim();
+            updatePreviewTally();
             document.getElementById('loadingIndicator').classList.add('hidden');
         };
 
+        function updatePreviewTally() {
+            const val = combinedOutput.value;
+            const size = new Blob([val]).size;
+            previewSize.textContent = (size / 1024).toFixed(1) + ' KB';
+            previewTokens.textContent = Math.ceil(size / 4).toLocaleString();
+        }
+
+        // Live Tally Updates on Transformation Toggles
+        document.querySelectorAll('.transform-trigger').forEach(el => el.onchange = () => { if (combinedOutput.value) combineBtn.click(); });
+
+        function showGlobalMessage(m, t = 'error') {
+            const d = document.createElement('div');
+            d.className = `fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-bold text-white z-[100] animate__animated animate__fadeInUp ${t === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`;
+            d.textContent = m; document.body.append(d);
+            setTimeout(() => { d.classList.replace('animate__fadeInUp', 'animate__fadeOutDown'); setTimeout(() => d.remove(), 500); }, 3000);
+        }
+
         document.getElementById('closeModal').onclick = () => document.getElementById('fileModal').classList.add('hidden');
-        copyBtn.onclick = () => { navigator.clipboard.writeText(combinedOutput.value); };
+        document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(combinedOutput.value); showGlobalMessage('Copied to clipboard!', 'success'); };
+        document.getElementById('downloadBtn').onclick = () => {
+            const b = new Blob([combinedOutput.value], { type: 'text/plain' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'prompt.txt'; a.click();
+        };
 
         // Tooltips
         tippy('[data-tippy-content]', { theme: 'light-border', arrow: false });
