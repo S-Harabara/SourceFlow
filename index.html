@@ -412,7 +412,7 @@
         includeGoal.onchange = () => goalText.classList.toggle('hidden', !includeGoal.checked);
 
         // Files Logic
-        function isText(n) { return ['.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.json', '.md', '.py', '.go', '.rs', '.php', '.rb', '.txt', '.sh', '.yaml', '.yml', '.lock', '.toml'].some(e => n.toLowerCase().endsWith(e)) || ['Makefile', 'Dockerfile', 'root'].includes(n); }
+        function isText(n) { return ['.vue', '.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.json', '.md', '.py', '.go', '.rs', '.php', '.rb', '.txt', '.sh', '.yaml', '.yml', '.lock', '.toml'].some(e => n.toLowerCase().endsWith(e)) || ['Makefile', 'Dockerfile', 'root'].includes(n); }
 
         async function getTree(h, p = '', c = fileTree, isRoot = false) {
             const list = []; for await (const e of h.values()) list.push(e);
@@ -559,7 +559,7 @@
         };
 
         // File Type Filters
-        const types = ['ts', 'js', 'json', 'md', 'html', 'css', 'py'];
+        const types = ['vue', 'ts', 'js', 'json', 'md', 'html', 'css', 'py'];
         const ftContainer = document.getElementById('fileTypeFilters');
         types.forEach(t => {
             const b = document.createElement('button');
