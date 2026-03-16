@@ -72,6 +72,8 @@
         return noComments.replace(/\s+/g, ' ').trim();
     };
 
+    import SkillsSelector from './SkillsSelector.svelte';
+    import { savedSkills, selectedSkillsForPrompt } from '../../skillsStore.js';
     import { slide } from 'svelte/transition';
     let isTransformExpanded = false;
 
@@ -84,6 +86,16 @@
         isGenerating.set(true);
         try {
             let res = '';
+
+            // Inject Skills
+            const selectedSkills = $savedSkills.filter(s => $selectedSkillsForPrompt.includes(s.id));
+            if (selectedSkills.length > 0) {
+                res += `SKILLS INSTRUCTIONS:\n`;
+                selectedSkills.forEach(skill => {
+                    res += `--- SKILL: ${skill.name} ---\n${skill.content}\n\n`;
+                });
+            }
+
             if ($includeGoal) res += `GOAL:\n${$goalText}\n\n`;
             if ($includeStructure) res += getProjectStructure();
 
@@ -196,6 +208,10 @@
                         </label>
                     </div>
                 {/if}
+                
+                <div class="mt-2 text-left w-full">
+                    <SkillsSelector on:change={generatePrompt} />
+                </div>
             </div>
         </div>
 

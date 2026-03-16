@@ -31,6 +31,12 @@
         </button>
         <button 
             class="w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors font-bold text-sm
+            {$currentView === 'skillsLibrary' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800'}"
+            on:click={() => $currentView = 'skillsLibrary'}>
+            <i class="fas fa-book-sparkles w-5 text-center"></i> Skills Library
+        </button>
+        <button 
+            class="w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors font-bold text-sm
             {$currentView === 'codeReview' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800'}"
             on:click={() => $currentView = 'codeReview'}>
             <i class="fas fa-code-pull-request w-5 text-center"></i> Code Review

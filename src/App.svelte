@@ -3,6 +3,7 @@
     import Sidebar from './components/Sidebar.svelte';
     import PromptBuilder from './views/PromptBuilder.svelte';
     import CodeReview from './views/CodeReview.svelte';
+    import SkillsLibrary from './views/SkillsLibrary.svelte';
     import FileModal from './components/PromptBuilder/FileModal.svelte';
     import { currentView } from './store.js';
 
@@ -20,6 +21,8 @@
         
         {#if $currentView === 'promptBuilder'}
             <PromptBuilder />
+        {:else if $currentView === 'skillsLibrary'}
+            <SkillsLibrary />
         {:else if $currentView === 'codeReview'}
             <CodeReview />
         {/if}

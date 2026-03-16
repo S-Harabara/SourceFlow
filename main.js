@@ -11,7 +11,8 @@ const createWindow = () => {
         height: 800,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            webSecurity: false // Disable CORS restrictions for skills.sh fetching
         }
     });
 
