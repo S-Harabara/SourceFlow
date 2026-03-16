@@ -96,3 +96,17 @@
     margin: 0;
     border: 0;
 }
+
+/* Tippy Custom Theme */
+.tippy-box[data-theme~='onyx'] {
+    background-color: var(--color-dark-accent);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    padding: 0.2rem 0.4rem;
+}
+
+.tippy-box[data-theme~='onyx'] > .tippy-arrow::before {
+    color: var(--color-dark-accent);
+}

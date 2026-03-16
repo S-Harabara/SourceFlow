@@ -14,17 +14,19 @@
         return res + "\n";
     }
 
-    const cleanComments = s => {
+    import { minify as terserMinify } from 'terser';
+    import { minify as cssoMinify } from 'csso';
+    import tippy from 'tippy.js';
+
+    const cleanComments = (s) => {
         if (!s) return s;
         // 1. Remove multi-line comments
         let res = s.replace(/\/\*[\s\S]*?\*\//g, '');
         // 2. Remove single-line comments line by line
-        // We process line by line to ensure we don't accidentally remove URLs
         return res.split('\n').map(line => {
             const index = line.indexOf('//');
             if (index !== -1) {
                 const before = line.substring(0, index);
-                // Heuristic: if it's not a URL, it's a comment
                 if (!before.trim().endsWith('http:') && !before.trim().endsWith('https:')) {
                     return before.trimEnd();
                 }
@@ -33,12 +35,40 @@
         }).join('\n');
     };
 
-    const minifyCode = s => {
+    const minifyHTML = (s) => {
         if (!s) return s;
-        // CRITICAL: To allow single-line minification, we MUST remove single-line comments first
-        // otherwise everything after the first // becomes a comment.
+        return s
+            .replace(/<!--[\s\S]*?-->/g, '') // Remove HTML comments
+            .replace(/>\s+</g, '><')          // Remove space between tags
+            .replace(/\s+/g, ' ')             // Collapse other whitespace
+            .trim();
+    };
+
+    const minifyCode = async (s, filename = '') => {
+        if (!s) return s;
+        const ext = filename.split('.').pop().toLowerCase();
+        
+        try {
+            if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) {
+                const result = await terserMinify(s, {
+                    compress: true,
+                    mangle: false,
+                    format: { comments: false }
+                });
+                return result.code || s;
+            } else if (['css', 'scss', 'less'].includes(ext)) {
+                // csso is generally safe in browser
+                return cssoMinify(s).css;
+            } else if (['html', 'svelte', 'vue', 'svg'].includes(ext)) {
+                // Avoiding html-minifier-terser as it requires Node 'path'
+                return minifyHTML(s);
+            }
+        } catch (e) {
+            console.warn(`Library minification failed for ${filename}, falling back to regex:`, e);
+        }
+
+        // Generic fallback
         const noComments = cleanComments(s);
-        // Collapse all whitespace (including \n) into a single space
         return noComments.replace(/\s+/g, ' ').trim();
     };
 
@@ -49,31 +79,48 @@
         }
 
         isGenerating.set(true);
-        let res = '';
-        if ($includeGoal) res += `GOAL:\n${$goalText}\n\n`;
-        if ($includeStructure) res += getProjectStructure();
+        try {
+            let res = '';
+            if ($includeGoal) res += `GOAL:\n${$goalText}\n\n`;
+            if ($includeStructure) res += getProjectStructure();
 
-        const paths = Array.from($selectedFiles);
-        for (const p of paths) {
-            const h = $fileHandles.find(x => x.p === p);
-            if (h) {
-                const file = await h.h.getFile();
-                let txt = await file.text();
-                
-                if ($removeComments) txt = cleanComments(txt);
-                if ($minifyOutput) txt = minifyCode(txt);
-                
-                res += `--- FILE: ${p} ---\n${txt}\n\n`;
+            const paths = Array.from($selectedFiles);
+            for (const p of paths) {
+                const h = $fileHandles.find(x => x.p === p);
+                if (h) {
+                    const file = await h.h.getFile();
+                    let txt = await file.text();
+                    
+                    if ($removeComments) txt = cleanComments(txt);
+                    if ($minifyOutput) {
+                        try {
+                            txt = await minifyCode(txt, p);
+                        } catch (err) {
+                            console.error(`Minification failed for ${p}:`, err);
+                        }
+                    }
+                    
+                    res += `--- FILE: ${p} ---\n${txt}\n\n`;
+                }
             }
+            
+            generatedOutput.set(res.trim());
+        } catch (error) {
+            console.error('Error in generatePrompt:', error);
+            alert('An error occurred during generation. Check console for details.');
+        } finally {
+            isGenerating.set(false);
         }
-        
-        generatedOutput.set(res.trim());
-        isGenerating.set(false);
     }
 
-    function copyToClipboard() {
+    function copyToClipboard(e) {
         navigator.clipboard.writeText($generatedOutput);
-        alert('Copied to clipboard!');
+        tippy(e.currentTarget, {
+            content: 'Copied!',
+            showOnCreate: true,
+            theme: 'onyx',
+            onHidden: (instance) => instance.destroy(),
+        });
     }
 
     function downloadFile() {
@@ -159,7 +206,7 @@
                 <i class="fas fa-bolt"></i> GENERATE PROMPT
             </button>
             <div class="flex gap-2">
-                <button on:click={copyToClipboard}
+                <button on:click={(e) => copyToClipboard(e)}
                     class="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl text-xs font-bold transition-all">
                     <i class="fas fa-copy text-blue-500"></i> COPY
                 </button>
