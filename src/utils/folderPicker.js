@@ -49,3 +49,11 @@ export async function selectFolder() {
         }
     }
 }
+
+export function resetFolder() {
+    fileTreeData.set([]);
+    fileHandles.set([]);
+    selectedFiles.set(new Set());
+    folderName.set("");
+}
+

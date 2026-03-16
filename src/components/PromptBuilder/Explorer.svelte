@@ -1,7 +1,7 @@
 <script>
 	import { fileTreeData, selectedFiles } from '../../promptStore.js';
 	import FileTreeItem from './FileTreeItem.svelte';
-	import { selectFolder } from '../../utils/folderPicker.js';
+	import { selectFolder, resetFolder } from '../../utils/folderPicker.js';
 
 	function selectAll() {
 		const getAll = (nodes, set) => {
@@ -30,6 +30,13 @@
 					<i class="fas fa-folder-open"></i>
 				</button>
 				<button
+					on:click={resetFolder}
+					title="Reset Folder"
+					class="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-gray-500 hover:text-red-500"
+				>
+					<i class="fas fa-rotate-left"></i>
+				</button>
+				<button
 					on:click={selectAll}
 					class="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-[10px] font-bold text-blue-500 dark:text-blue-400"
 				>
@@ -45,7 +52,7 @@
 				role="button"
 				tabindex="0"
 				on:click={() => $fileTreeData.length === 0 && selectFolder()}
-				class="flex-grow overflow-auto custom-scrollbar bg-gray-50 dark:bg-gray-800/30 rounded-xl p-2 font-mono text-[11px] relative select-none shrink-0 w-full min-h-0 {$fileTreeData.length ===
+				class="flex-grow overflow-auto custom-scrollbar bg-gray-50 dark:bg-gray-800/30 rounded-xl p-2 font-mono text-[11px] relative select-none w-full min-h-0 {$fileTreeData.length ===
 				0
 					? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all border-2 border-dashed border-transparent hover:border-blue-500/30'
 					: ''}"
