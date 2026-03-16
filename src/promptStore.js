@@ -1,0 +1,51 @@
+import { writable, derived } from 'svelte/store';
+
+// Folder state
+export const folderName = writable("");
+export const fileHandles = writable([]);
+export const selectedFiles = writable(new Set()); // set of paths
+export const fileTreeData = writable([]);
+export const recentFolders = writable([]);
+
+// UI State
+export const explorerFilter = writable('');
+export const includeGoal = writable(false);
+export const goalText = writable('');
+export const includeStructure = writable(true);
+export const removeComments = writable(false);
+export const minifyOutput = writable(false);
+
+// Generation State
+export const generatedOutput = writable('');
+export const isGenerating = writable(false);
+
+export const activeModalFile = writable(null); // { name, content }
+
+// Computed stats
+export const totalSelectedSize = derived(
+    [fileHandles, selectedFiles],
+    ([$fileHandles, $selectedFiles]) => {
+        let size = 0;
+        for (const path of $selectedFiles) {
+            const h = $fileHandles.find(f => f.p === path);
+            if (h) size += h.s;
+        }
+        return size;
+    }
+);
+
+export const totalSelectedTokens = derived(
+    totalSelectedSize,
+    ($size) => Math.ceil($size / 4)
+);
+
+export const previewSize = derived(
+    generatedOutput,
+    ($out) => new Blob([$out]).size
+);
+
+export const previewTokens = derived(
+    previewSize,
+    ($size) => Math.ceil($size / 4)
+);
+
