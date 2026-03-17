@@ -2,6 +2,7 @@ import { writable, derived } from 'svelte/store';
 
 // Folder state
 export const folderName = writable("");
+export const rootPath = writable(""); // Absolute path for git/node operations
 export const fileHandles = writable([]);
 export const selectedFiles = writable(new Set()); // set of paths
 export const fileTreeData = writable([]);

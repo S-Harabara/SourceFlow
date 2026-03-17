@@ -1,6 +1,10 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +31,102 @@ const createWindow = () => {
         win.loadFile(path.join(__dirname, 'dist', 'index.html'));
     }
 }
+
+// IPC Handlers
+ipcMain.handle('select-folder', async () => {
+    const result = await dialog.showOpenDialog({
+        properties: ['openDirectory']
+    });
+    if (result.canceled) return null;
+    const folderPath = result.filePaths[0];
+    return {
+        path: folderPath,
+        name: path.basename(folderPath)
+    };
+});
+
+ipcMain.handle('get-git-branches', async (event, projectPath) => {
+    try {
+        const { stdout } = await execAsync('git branch -a', { cwd: projectPath });
+        const branches = stdout.split('\n')
+            .map(b => b.trim().replace(/^\* /, ''))
+            .filter(b => b && !b.includes('->'))
+            .map(b => b.replace('remotes/origin/', ''));
+        return [...new Set(branches)]; // Unique branches
+    } catch (error) {
+        console.error('Error fetching git branches:', error);
+        return [];
+    }
+});
+
+ipcMain.handle('get-git-diff', async (event, { projectPath, source, target }) => {
+    try {
+        // Use -U1000 to get a lot of context, or just standard diff
+        const { stdout } = await execAsync(`git diff ${source}..${target}`, { 
+            cwd: projectPath,
+            maxBuffer: 10 * 1024 * 1024 // 10MB
+        });
+        return stdout;
+    } catch (error) {
+        console.error('Error fetching git diff:', error);
+        throw error;
+    }
+});
+
+async function walkDir(dir, baseDir, ignoreFilter) {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const files = await fs.readdir(dir, { withFileTypes: true });
+    const nodes = [];
+
+    for (const file of files) {
+        const fullPath = path.join(dir, file.name);
+        const relativePath = path.relative(baseDir, fullPath);
+        
+        if (ignoreFilter && ignoreFilter.ignores(relativePath)) continue;
+
+        if (file.isDirectory()) {
+            const children = await walkDir(fullPath, baseDir, ignoreFilter);
+            nodes.push({
+                name: file.name,
+                kind: 'directory',
+                path: relativePath,
+                children,
+                expanded: false
+            });
+        } else {
+            const stats = await fs.stat(fullPath);
+            nodes.push({
+                name: file.name,
+                kind: 'file',
+                path: relativePath,
+                size: stats.size,
+                isText: true // We can add more logic here if needed
+            });
+        }
+    }
+    return nodes.sort((a, b) => a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'directory' ? -1 : 1);
+}
+
+ipcMain.handle('scan-directory', async (event, { projectPath, ignoreRules }) => {
+    // Basic ignore logic if not passed
+    const rules = ignoreRules || '.git\nnode_modules\n.next\ndist\nbuild\nout\n.cache';
+    // We reuse the GitIgnore-like logic from main or just pass it
+    // For simplicity, let's just do a basic check here or implement it
+    
+    // Actually, it's better to implement the ignore logic in the renderer or pass a filter
+    const { stdout } = await execAsync('ls -R', { cwd: projectPath }).catch(() => ({ stdout: '' })); // just a placeholder
+    
+    // Let's use fs.readdir instead
+    return await walkDir(projectPath, projectPath, null); 
+});
+
+ipcMain.handle('read-file', async (event, { filePath, projectPath }) => {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const fullPath = path.isAbsolute(filePath) ? filePath : path.join(projectPath, filePath);
+    return await fs.readFile(fullPath, 'utf8');
+});
 
 app.whenReady().then(() => {
     // // 1. Grant general file system access

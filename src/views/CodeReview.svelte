@@ -1,10 +1,61 @@
 <script>
+    import BranchSelector from '../components/CodeReview/BranchSelector.svelte';
+    import GenerationPanel from '../components/CodeReview/GenerationPanel.svelte';
+    import { onMount } from 'svelte';
+
+    let selectorWidth = 33; // percentage
+    let isResizing = false;
+
+    function startResizing() {
+        isResizing = true;
+    }
+
+    function stopResizing() {
+        isResizing = false;
+    }
+
+    function handleMouseMove(e) {
+        if (!isResizing) return;
+        const container = document.getElementById('code-review-container');
+        if (!container) return;
+        
+        const containerRect = container.getBoundingClientRect();
+        const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+        
+        // Boundaries
+        if (newWidth > 20 && newWidth < 60) {
+            selectorWidth = newWidth;
+        }
+    }
+
+    onMount(() => {
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', stopResizing);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', stopResizing);
+        };
+    });
 </script>
 
-<main class="flex flex-grow overflow-hidden p-8 items-center justify-center relative">
-    <div class="flex flex-col items-center gap-4 text-gray-400 dark:text-gray-500 animate__animated animate__fadeIn">
-        <i class="fas fa-code-pull-request text-6xl opacity-50"></i>
-        <h2 class="text-2xl font-bold">Code Review</h2>
-        <p class="text-sm max-w-md text-center">This view is currently empty and serves as a placeholder for the upcoming code review feature.</p>
-    </div>
-</main>
+<div class="flex flex-col flex-grow h-screen overflow-hidden" id="code-review-container">
+    <main class="flex flex-grow overflow-hidden p-4 gap-0 flex-row relative h-full select-none" class:cursor-col-resize={isResizing}>
+        <div style="width: {selectorWidth}%" class="flex-shrink-0 relative overflow-hidden">
+            <BranchSelector />
+        </div>
+        
+        <!-- Draggable Resizer -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div 
+            on:mousedown={startResizing}
+            class="w-1.5 hover:w-2 group cursor-col-resize flex items-center justify-center transition-all bg-transparent hover:bg-purple-500/30 flex-shrink-0 z-10"
+            class:bg-purple-500={isResizing}
+        >
+            <div class="w-[1px] h-8 bg-gray-300 dark:bg-gray-700 group-hover:bg-purple-500 transition-colors"></div>
+        </div>
+
+        <div class="flex-grow relative overflow-hidden">
+            <GenerationPanel />
+        </div>
+    </main>
+</div>

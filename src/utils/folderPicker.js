@@ -1,32 +1,33 @@
-/** @type {import('svelte/store').Writable<any[]>} */
 import { 
     fileTreeData, 
     fileHandles, 
     selectedFiles, 
     folderName, 
-    recentFolders 
+    recentFolders,
+    rootPath
 } from '../promptStore.js';
 import { buildFileTree, GitIgnore } from './fileScanner.js';
+import { selectProjectFolder } from './gitUtils.js';
 
 export async function selectFolder() {
     try {
-        // @ts-ignore
-        const handle = await window.showDirectoryPicker();
+        const result = await selectProjectFolder();
+        if (!result) return;
+
+        const { path: folderPath, name } = result;
+        
         fileTreeData.set([]);
         fileHandles.set([]);
         selectedFiles.set(new Set());
-        folderName.set(handle.name);
+        folderName.set(name);
+        rootPath.set(folderPath);
 
-        const ignoreFilter = new GitIgnore('.git\nnode_modules\n.next\ndist\nbuild\nout\n.cache');
+        const { tree, handles } = await buildFileTree(folderPath);
 
-        /** @type {any[]} */
-        let handlesArray = [];
-        const tree = await buildFileTree(handle, '', ignoreFilter, handlesArray);
-
-        fileHandles.set(handlesArray);
+        fileHandles.set(handles);
         fileTreeData.set([
             {
-                name: handle.name,
+                name: name,
                 kind: 'directory',
                 path: 'root',
                 children: tree,
@@ -38,15 +39,13 @@ export async function selectFolder() {
         // Save recent
         recentFolders.update((r) => {
             /** @type {any[]} */
-            let next = r.filter((x) => x.name !== handle.name);
-            next.unshift({ name: handle.name, handle });
+            let next = r.filter((x) => x.name !== name);
+            next.unshift({ name, path: folderPath });
             if (next.length > 8) next.pop();
             return next;
         });
     } catch (e) {
-        if (e && typeof e === 'object' && 'name' in e && e.name !== 'AbortError') {
-            console.error(e);
-        }
+        console.error(e);
     }
 }
 

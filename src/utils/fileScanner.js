@@ -1,3 +1,5 @@
+const { ipcRenderer } = window.require('electron');
+
 export class GitIgnore {
     constructor(p) { 
         this.rules = p.split('\n').filter(l => l && !l.startsWith('#')).map(r => { 
@@ -17,33 +19,31 @@ export function isTextFile(n) {
     return ['.vue', '.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.json', '.md', '.py', '.go', '.rs', '.php', '.rb', '.txt', '.sh', '.yaml', '.yml', '.lock', '.toml', '.svelte'].some(e => n.toLowerCase().endsWith(e)) || ['Makefile', 'Dockerfile', 'root'].includes(n); 
 }
 
-export async function buildFileTree(handle, pathPrefix = '', ignoreFilter = null, fileHandlesArray = []) {
-    const list = []; 
-    for await (const e of handle.values()) list.push(e);
-    list.sort((a, b) => a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'directory' ? -1 : 1);
-
-    const nodes = [];
-    for (const e of list) {
-        const fullPath = pathPrefix ? `${pathPrefix}/${e.name}` : e.name;
-        if (ignoreFilter && ignoreFilter.ignores(fullPath)) continue;
-
-        if (e.kind === 'directory') {
-            const dirHandle = await handle.getDirectoryHandle(e.name);
-            const children = await buildFileTree(dirHandle, fullPath, ignoreFilter, fileHandlesArray);
-            nodes.push({ name: e.name, kind: 'directory', path: fullPath, children, expanded: false });
-        } else {
-            const isText = isTextFile(e.name);
-            let size = 0;
-            if (isText) {
-                const fileHandle = await handle.getFileHandle(e.name);
-                const file = await fileHandle.getFile();
-                size = file.size;
-                fileHandlesArray.push({ h: fileHandle, p: fullPath, s: size, n: e.name });
-                nodes.push({ name: e.name, kind: 'file', path: fullPath, size, isText: true });
-            } else {
-                nodes.push({ name: e.name, kind: 'file', path: fullPath, size: 0, isText: false });
+export async function buildFileTree(projectPath) {
+    const tree = await ipcRenderer.invoke('scan-directory', { projectPath });
+    
+    // Flatten for fileHandles stores
+    const handles = [];
+    const flatten = (nodes) => {
+        nodes.forEach(n => {
+            if (n.kind === 'file') {
+                // We wrap it in a mock handle that uses IPC to read file content
+                handles.push({ 
+                    p: n.path, 
+                    s: n.size, 
+                    n: n.name,
+                    h: {
+                        getFile: async () => ({
+                            text: async () => await ipcRenderer.invoke('read-file', { filePath: n.path, projectPath })
+                        })
+                    }
+                });
+            } else if (n.children) {
+                flatten(n.children);
             }
-        }
-    }
-    return nodes;
+        });
+    };
+    flatten(tree);
+    
+    return { tree, handles };
 }
