@@ -11,8 +11,8 @@ const getLocalStorage = (key, defaultValue) => {
     }
 };
 
-// All skills saved in the user's library
-// Format: [{ id, name, description, content, sourceUrl, isLocal }]
+// All skills saved in the user's library (remote + local drag-drop)
+// Format: [{ id, name, description, content, sourceUrl, isLocal, isCustom, linkedFiles? }]
 export const savedSkills = writable(getLocalStorage('sourceflow_saved_skills', []));
 
 // IDs of favorited skills
@@ -55,6 +55,12 @@ export const removeSkill = (id) => {
     savedSkills.update(skills => skills.filter(s => s.id !== id));
     favoriteSkillIds.update(favs => favs.filter(favId => favId !== id));
     selectedSkillsForPrompt.update(selected => selected.filter(selId => selId !== id));
+};
+
+export const updateSkill = (id, patch) => {
+    savedSkills.update(skills =>
+        skills.map(s => s.id === id ? { ...s, ...patch } : s)
+    );
 };
 
 export const toggleFavorite = (id) => {

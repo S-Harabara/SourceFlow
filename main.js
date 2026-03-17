@@ -29,26 +29,26 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-    // 1. Grant general file system access
-    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-        if (permission === 'fileSystem') {
-            callback(true); 
-        } else {
-            callback(true); 
-        }
-    });
+    // // 1. Grant general file system access
+    // session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    //     if (permission === 'fileSystem') {
+    //         callback(true); 
+    //     } else {
+    //         callback(true); 
+    //     }
+    // });
 
-    session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
-        if (permission === 'fileSystem') return true;
-        return true;
-    });
+    // session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    //     if (permission === 'fileSystem') return true;
+    //     return true;
+    // });
 
-    // 2. CRITICAL FIX: Handle restricted paths that cause the "File picker already active" bug
-    session.defaultSession.on('file-system-access-restricted', (event, details, callback) => {
-        // Automatically allow access to protected folders (Desktop, Downloads, etc.)
-        // This forces the Promise to resolve and frees up the file picker lock.
-        callback('allow'); 
-    });
+    // // 2. CRITICAL FIX: Handle restricted paths that cause the "File picker already active" bug
+    // session.defaultSession.on('file-system-access-restricted', (event, details, callback) => {
+    //     // Automatically allow access to protected folders (Desktop, Downloads, etc.)
+    //     // This forces the Promise to resolve and frees up the file picker lock.
+    //     callback('allow'); 
+    // });
 
     createWindow();
 
