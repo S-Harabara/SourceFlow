@@ -13,10 +13,11 @@
         sourceBranch, 
         targetBranch, 
         codeReviewProjectPath,
-        isGeneratingDiff 
+        isGeneratingDiff,
+        isSourceLocal,
+        isTargetLocal 
     } from '../../codeReviewStore.js';
     import { getGitDiff } from '../../utils/gitUtils.js';
-    import TokenPill from '../PromptBuilder/TokenPill.svelte';
     import TransformationPanel from '../PromptBuilder/TransformationPanel.svelte';
     import SkillsSelector from '../PromptBuilder/SkillsSelector.svelte';
     import { savedSkills, selectedSkillsForPrompt } from '../../skillsStore.js';
@@ -40,6 +41,11 @@
     async function generatePrompt() {
         if (!$codeReviewProjectPath || !$sourceBranch || !$targetBranch) {
             alert('Select project and branches first');
+            return;
+        }
+
+        if (!$isSourceLocal || !$isTargetLocal) {
+            alert('Both branches must be fetched to local before generating diff.');
             return;
         }
 
@@ -94,37 +100,29 @@
     }
 </script>
 
-<section class="flex-grow flex flex-col gap-4 overflow-hidden h-full">
+<section class="grow flex flex-col gap-4 overflow-hidden h-full">
     <div class="bg-white dark:bg-dark-card rounded-2xl border dark:border-dark-border p-4 shadow-sm flex flex-col gap-4 overflow-hidden h-full">
         <div class="flex items-center justify-between pb-2 border-b dark:border-dark-border shrink-0">
-            <h2 class="font-bold flex items-center gap-2">
+            <h2 class="font-bold flex items-center gap-2 text-sm tracking-tight">
                 <i class="fas fa-microscope text-purple-500"></i> Review Generation
             </h2>
-
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase text-gray-400">
-                    <span>Size:</span>
-                    <span class="text-emerald-500 font-mono">{($previewSize / 1024).toFixed(1)} KB</span>
-                </div>
-                <TokenPill tokens={$previewTokens} label="tokens" />
-            </div>
         </div>
 
-        <div class="">
+        <div class="shrink-0">
             <div class="flex items-center justify-between">
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" bind:checked={$includeGoal} class="w-4 h-4 rounded border-gray-300" />
-                    <span class="text-xs font-bold py-1">Include Project Goal</span>
+                    <span class="text-[11px] font-bold py-1 text-gray-600 dark:text-gray-400">Include Project Goal</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" bind:checked={$includeStructure} class="w-4 h-4 rounded border-gray-300" />
-                    <span class="text-xs font-bold py-1">Include Structure</span>
+                    <span class="text-[11px] font-bold py-1 text-gray-600 dark:text-gray-400">Include Structure</span>
                 </label>
             </div>
             {#if $includeGoal}
                 <textarea
                     bind:value={$goalText}
-                    class="w-full mt-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-xs p-2 h-14 outline-none focus:ring-1 focus:ring-blue-500"
+                    class="w-full mt-2 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-xs p-2.5 h-16 outline-none focus:ring-1 focus:ring-blue-500 custom-scrollbar resize-none"
                     placeholder="What should the AI look for in this review?"
                 ></textarea>
             {/if}
@@ -137,7 +135,7 @@
             </div>
         </div>
 
-        <div class="flex-grow flex flex-col relative overflow-hidden bg-gray-100 dark:bg-gray-900/40 rounded-xl p-1 w-full min-h-[100px]">
+        <div class="grow flex flex-col relative overflow-hidden bg-gray-100 dark:bg-gray-900/40 rounded-xl p-1 w-full min-h-[100px]">
             {#if $isGenerating}
                 <div class="absolute inset-0 bg-white/50 dark:bg-dark-bg/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-xl">
                     <div class="flex flex-col items-center gap-3">
@@ -157,7 +155,8 @@
         <div class="flex items-center justify-between gap-4 pt-1 shrink-0">
             <button
                 on:click={generatePrompt}
-                class="flex-grow bg-purple-600 hover:bg-purple-700 text-white font-black py-3 px-8 rounded-xl shadow-lg shadow-purple-500/20 transform transition-all active:scale-95 flex items-center justify-center gap-3 text-sm"
+                class="grow bg-purple-600 hover:bg-purple-700 text-white font-black py-3 px-8 rounded-xl shadow-lg shadow-purple-500/20 transform transition-all active:scale-95 flex items-center justify-center gap-3 text-xs tracking-wider"
+                disabled={$isGenerating || !$isSourceLocal || !$isTargetLocal}
             >
                 <i class="fas fa-wand-magic-sparkles"></i> GENERATE REVIEW PROMPT
             </button>
@@ -172,7 +171,7 @@
                     on:click={downloadFile}
                     class="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl text-xs font-bold transition-all"
                 >
-                    <i class="fas fa-download text-indigo-500"></i> DOWNLOAD
+                    <i class="fas fa-download text-indigo-500"></i>
                 </button>
             </div>
         </div>

@@ -7,3 +7,6 @@ export const diffOutput = writable("");
 export const isGeneratingDiff = writable(false);
 export const codeReviewProjectName = writable("");
 export const codeReviewProjectPath = writable("");
+export const isSourceLocal = writable(true);
+export const isTargetLocal = writable(true);
+export const fetchingBranch = writable(""); // name of the branch being fetched

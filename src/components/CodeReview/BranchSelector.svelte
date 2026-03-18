@@ -5,10 +5,14 @@
         targetBranch, 
         branchesList, 
         codeReviewProjectName, 
-        codeReviewProjectPath 
+        codeReviewProjectPath,
+        isSourceLocal,
+        isTargetLocal,
+        fetchingBranch
     } from '../../codeReviewStore.js';
     import { rootPath, folderName as globalFolderName } from '../../promptStore.js';
-    import { getGitBranches, selectProjectFolder } from '../../utils/gitUtils.js';
+    import { getGitBranches, selectProjectFolder, checkBranchLocal, fetchBranch } from '../../utils/gitUtils.js';
+    import SearchableSelect from '../Common/SearchableSelect.svelte';
 
     async function handleSelectFolder() {
         const result = await selectProjectFolder();
@@ -19,6 +23,33 @@
         }
     }
 
+    async function checkLocality() {
+        if ($codeReviewProjectPath) {
+            if ($sourceBranch) {
+                const local = await checkBranchLocal($codeReviewProjectPath, $sourceBranch);
+                isSourceLocal.set(local);
+            }
+            if ($targetBranch) {
+                const local = await checkBranchLocal($codeReviewProjectPath, $targetBranch);
+                isTargetLocal.set(local);
+            }
+        }
+    }
+
+    async function handleFetch(branch, type) {
+        if (!$codeReviewProjectPath) return;
+        fetchingBranch.set(branch);
+        try {
+            await fetchBranch($codeReviewProjectPath, branch);
+            if (type === 'source') isSourceLocal.set(true);
+            else isTargetLocal.set(true);
+        } catch (e) {
+            alert(`Failed to fetch branch ${branch}. Make sure it exists on origin.`);
+        } finally {
+            fetchingBranch.set("");
+        }
+    }
+
     async function refreshBranches() {
         if ($codeReviewProjectPath) {
             const list = await getGitBranches($codeReviewProjectPath);
@@ -26,6 +57,7 @@
             if (list.length > 0) {
                 if (!$sourceBranch) sourceBranch.set(list[0]);
                 if (!$targetBranch) targetBranch.set(list[0]);
+                checkLocality();
             }
         }
     }
@@ -36,8 +68,14 @@
             codeReviewProjectPath.set($rootPath);
             codeReviewProjectName.set($globalFolderName);
             refreshBranches();
+        } else if ($codeReviewProjectPath) {
+            checkLocality();
         }
     });
+
+    $: if ($sourceBranch || $targetBranch) {
+        checkLocality();
+    }
 </script>
 
 <div class="h-full flex flex-col gap-4">
@@ -62,32 +100,66 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 block px-1">Source Branch</label>
-                        <select 
-                            bind:value={$sourceBranch}
-                            class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl py-2 px-3 text-xs outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
-                        >
-                            {#each $branchesList as branch}
-                                <option value={branch}>{branch}</option>
-                            {/each}
-                        </select>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between px-1">
+                            <label class="text-[10px] uppercase font-bold text-gray-400 block">Source Branch</label>
+                            {#if $sourceBranch}
+                                <span class="text-[9px] font-bold {$isSourceLocal ? 'text-emerald-500' : 'text-amber-500'} uppercase">
+                                    {$isSourceLocal ? 'Local' : 'Remote'}
+                                </span>
+                            {/if}
+                        </div>
+                        <SearchableSelect 
+                            bind:value={$sourceBranch} 
+                            options={$branchesList} 
+                            placeholder="Select source..."
+                        />
+                        {#if $sourceBranch && !$isSourceLocal}
+                            <button 
+                                on:click={() => handleFetch($sourceBranch, 'source')}
+                                disabled={$fetchingBranch === $sourceBranch}
+                                class="w-full py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 transition-all flex items-center justify-center gap-2"
+                            >
+                                {#if $fetchingBranch === $sourceBranch}
+                                    <i class="fas fa-spinner fa-spin"></i> FETCHING...
+                                {:else}
+                                    <i class="fas fa-download"></i> FETCH TO LOCAL
+                                {/if}
+                            </button>
+                        {/if}
                     </div>
 
-                    <div class="flex justify-center -my-2 opacity-50">
+                    <div class="flex justify-center -my-2 opacity-30">
                         <i class="fas fa-arrow-down text-[10px] text-gray-400"></i>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 block px-1">Target Branch</label>
-                        <select 
-                            bind:value={$targetBranch}
-                            class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl py-2 px-3 text-xs outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
-                        >
-                            {#each $branchesList as branch}
-                                <option value={branch}>{branch}</option>
-                            {/each}
-                        </select>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between px-1">
+                            <label class="text-[10px] uppercase font-bold text-gray-400 block">Target Branch</label>
+                            {#if $targetBranch}
+                                <span class="text-[9px] font-bold {$isTargetLocal ? 'text-emerald-500' : 'text-amber-500'} uppercase">
+                                    {$isTargetLocal ? 'Local' : 'Remote'}
+                                </span>
+                            {/if}
+                        </div>
+                        <SearchableSelect 
+                            bind:value={$targetBranch} 
+                            options={$branchesList} 
+                            placeholder="Select target..."
+                        />
+                        {#if $targetBranch && !$isTargetLocal}
+                            <button 
+                                on:click={() => handleFetch($targetBranch, 'target')}
+                                disabled={$fetchingBranch === $targetBranch}
+                                class="w-full py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 transition-all flex items-center justify-center gap-2"
+                            >
+                                {#if $fetchingBranch === $targetBranch}
+                                    <i class="fas fa-spinner fa-spin"></i> FETCHING...
+                                {:else}
+                                    <i class="fas fa-download"></i> FETCH TO LOCAL
+                                {/if}
+                            </button>
+                        {/if}
                     </div>
                 </div>
 
@@ -101,7 +173,7 @@
         {:else}
             <div 
                 on:click={handleSelectFolder}
-                class="flex-grow min-h-[200px] border-2 border-dashed border-gray-200 dark:border-dark-border rounded-xl flex flex-col items-center justify-center p-6 text-center gap-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group"
+                class="grow min-h-[200px] border-2 border-dashed border-gray-200 dark:border-dark-border rounded-xl flex flex-col items-center justify-center p-6 text-center gap-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group"
             >
                 <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                     <i class="fas fa-folder-open text-blue-500/50 text-xl"></i>

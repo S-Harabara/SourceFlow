@@ -47,11 +47,13 @@ ipcMain.handle('select-folder', async () => {
 
 ipcMain.handle('get-git-branches', async (event, projectPath) => {
     try {
-        const { stdout } = await execAsync('git branch -a', { cwd: projectPath });
+        // Try to fetch latest branches, but don't fail if it doesn't work (e.g. no internet)
+        await execAsync('git fetch --all --prune', { cwd: projectPath }).catch(() => {});
+        
+        const { stdout } = await execAsync('git branch -a --format="%(refname:short)"', { cwd: projectPath });
         const branches = stdout.split('\n')
-            .map(b => b.trim().replace(/^\* /, ''))
-            .filter(b => b && !b.includes('->'))
-            .map(b => b.replace('remotes/origin/', ''));
+            .map(b => b.trim())
+            .filter(b => b && !b.includes('->'));
         return [...new Set(branches)]; // Unique branches
     } catch (error) {
         console.error('Error fetching git branches:', error);
@@ -62,13 +64,37 @@ ipcMain.handle('get-git-branches', async (event, projectPath) => {
 ipcMain.handle('get-git-diff', async (event, { projectPath, source, target }) => {
     try {
         // Use -U1000 to get a lot of context, or just standard diff
-        const { stdout } = await execAsync(`git diff ${source}..${target}`, { 
+        // Using space instead of .. and adding -- to avoid ambiguity with filenames
+        const { stdout } = await execAsync(`git diff "${source}" "${target}" --`, { 
             cwd: projectPath,
-            maxBuffer: 10 * 1024 * 1024 // 10MB
+            maxBuffer: 20 * 1024 * 1024 // 20MB
         });
         return stdout;
     } catch (error) {
         console.error('Error fetching git diff:', error);
+        throw error;
+    }
+});
+
+ipcMain.handle('check-branch-local', async (event, { projectPath, branch }) => {
+    try {
+        // Check if refs/heads/<branch> exists
+        await execAsync(`git rev-parse --verify "refs/heads/${branch}"`, { cwd: projectPath });
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
+ipcMain.handle('fetch-branch', async (event, { projectPath, branch }) => {
+    try {
+        // Try to fetch the specific branch from origin and create a local tracking branch
+        // If it's already local, this might fail or do nothing depending on the command
+        // We use fetch origin <branch>:<branch> to create/update local branch from remote
+        await execAsync(`git fetch origin "${branch}":"${branch}"`, { cwd: projectPath });
+        return true;
+    } catch (error) {
+        console.error(`Error fetching branch ${branch}:`, error);
         throw error;
     }
 });
