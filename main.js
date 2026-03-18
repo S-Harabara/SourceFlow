@@ -78,8 +78,8 @@ ipcMain.handle('get-git-diff', async (event, { projectPath, source, target }) =>
 
 ipcMain.handle('check-branch-local', async (event, { projectPath, branch }) => {
     try {
-        // Check if refs/heads/<branch> exists
-        await execAsync(`git rev-parse --verify "refs/heads/${branch}"`, { cwd: projectPath });
+        // Strict check: only branches in refs/heads/ are considered "Local"
+        await execAsync(`git show-ref --verify "refs/heads/${branch}"`, { cwd: projectPath });
         return true;
     } catch (e) {
         return false;
@@ -88,10 +88,26 @@ ipcMain.handle('check-branch-local', async (event, { projectPath, branch }) => {
 
 ipcMain.handle('fetch-branch', async (event, { projectPath, branch }) => {
     try {
-        // Try to fetch the specific branch from origin and create a local tracking branch
-        // If it's already local, this might fail or do nothing depending on the command
-        // We use fetch origin <branch>:<branch> to create/update local branch from remote
-        await execAsync(`git fetch origin "${branch}":"${branch}"`, { cwd: projectPath });
+        let remote = 'origin';
+        let remoteBranch = branch;
+        let localBranch = branch;
+
+        // Try to identify remote from prefix (e.g. origin/main -> remote=origin, branch=main)
+        // Correct prefix detection depends on knowing existing remotes
+        const { stdout: remotesOut } = await execAsync('git remote', { cwd: projectPath });
+        const remotesArray = remotesOut.split('\n').map(r => r.trim()).filter(Boolean);
+        
+        for (const r of remotesArray) {
+            if (branch.startsWith(`${r}/`)) {
+                remote = r;
+                remoteBranch = branch.replace(`${r}/`, '');
+                localBranch = remoteBranch;
+                break;
+            }
+        }
+
+        console.log(`Executing: git fetch ${remote} "+${remoteBranch}":"${localBranch}"`);
+        await execAsync(`git fetch ${remote} "+${remoteBranch}":"${localBranch}"`, { cwd: projectPath });
         return true;
     } catch (error) {
         console.error(`Error fetching branch ${branch}:`, error);

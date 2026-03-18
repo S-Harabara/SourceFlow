@@ -23,15 +23,17 @@
     import { savedSkills, selectedSkillsForPrompt } from '../../skillsStore.js';
     import tippy from 'tippy.js';
 
+    /** @param {any[]} nodes @param {number} depth */
     function getProjectStructure() {
         let res = 'PROJECT STRUCTURE:\n';
-        const buildStr = (nodes, depth) => {
-            nodes
+        /** @param {any[]} nArr @param {number} d */
+        const buildStr = (nArr, d) => {
+            nArr
                 .sort((a, b) => (a.kind === 'directory' ? -1 : 1))
                 .forEach((n) => {
                     const icon = n.kind === 'directory' ? '📁 ' : '📄 ';
-                    res += '  '.repeat(depth) + icon + n.name + '\n';
-                    if (n.kind === 'directory' && n.children) buildStr(n.children, depth + 1);
+                    res += '  '.repeat(d) + icon + n.name + '\n';
+                    if (n.kind === 'directory' && n.children) buildStr(n.children, d + 1);
                 });
         };
         buildStr($fileTreeData, 0);
@@ -156,7 +158,7 @@
             <button
                 on:click={generatePrompt}
                 class="grow bg-purple-600 hover:bg-purple-700 text-white font-black py-3 px-8 rounded-xl shadow-lg shadow-purple-500/20 transform transition-all active:scale-95 flex items-center justify-center gap-3 text-xs tracking-wider"
-                disabled={$isGenerating || !$isSourceLocal || !$isTargetLocal}
+                disabled={$isGenerating || !$isGeneratingDiff && (!$isSourceLocal || !$isTargetLocal)}
             >
                 <i class="fas fa-wand-magic-sparkles"></i> GENERATE REVIEW PROMPT
             </button>
@@ -170,6 +172,7 @@
                 <button
                     on:click={downloadFile}
                     class="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl text-xs font-bold transition-all"
+                    title="Download Review Prompt"
                 >
                     <i class="fas fa-download text-indigo-500"></i>
                 </button>

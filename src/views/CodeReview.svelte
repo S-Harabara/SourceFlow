@@ -1,6 +1,6 @@
 <script>
     import BranchSelector from '../components/CodeReview/BranchSelector.svelte';
-    import GenerationPanel from '../components/CodeReview/GenerationPanel.svelte';
+    import ReviewPanel from '../components/CodeReview/ReviewPanel.svelte';
     import CodeReviewTopNav from '../components/CodeReview/CodeReviewTopNav.svelte';
     import { onMount } from 'svelte';
 
@@ -39,7 +39,7 @@
     });
 </script>
 
-<div class="flex flex-col flex-grow h-screen overflow-hidden" id="code-review-container">
+<div class="flex flex-col grow h-screen overflow-hidden" id="code-review-container">
     <CodeReviewTopNav />
 
     <main class="flex grow overflow-hidden p-4 gap-0 flex-row relative h-full select-none" class:cursor-col-resize={isResizing}>
@@ -58,7 +58,7 @@
         </div>
 
         <div class="grow relative overflow-hidden">
-            <GenerationPanel />
+            <ReviewPanel />
         </div>
     </main>
 </div>
