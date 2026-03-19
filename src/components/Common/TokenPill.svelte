@@ -29,10 +29,10 @@
 			<!-- How tokens work -->
 			<div>
 				<div class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-1.5">
-					<i class="fas fa-circle-info text-blue-400"></i> How this is estimated
+					<i class="fas fa-circle-info text-blue-400"></i> How this is calculated
 				</div>
 				<p class="text-[11px] text-gray-300 leading-relaxed">
-					Tokens are estimated at <span class="font-bold text-white">~4 characters per token</span>. This is the rough average for English code and prose.
+					Tokens are calculated using the <span class="font-bold text-white">@anthropic-ai/tokenizer</span>. This provides a precise count for most modern LLMs (Gemini, Claude, GPT-4).
 				</p>
 			</div>
 

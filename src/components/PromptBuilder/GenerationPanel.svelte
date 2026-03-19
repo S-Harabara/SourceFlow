@@ -80,7 +80,7 @@
 
 	import SkillsSelector from './SkillsSelector.svelte';
 	import TransformationPanel from './TransformationPanel.svelte';
-	import TokenPill from './TokenPill.svelte';
+	import TokenPill from '../Common/TokenPill.svelte';
 	import Button from '../Common/Button.svelte';
 	import { savedSkills, selectedSkillsForPrompt } from '../../skillsStore.js';
 

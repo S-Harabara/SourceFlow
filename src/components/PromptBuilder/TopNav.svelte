@@ -5,7 +5,7 @@
 		selectedFiles
 	} from '../../promptStore.js';
 	import { selectFolder } from '../../utils/folderPicker.js';
-	import TokenPill from './TokenPill.svelte';
+	import TokenPill from '../Common/TokenPill.svelte';
 </script>
 
 <nav

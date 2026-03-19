@@ -1,4 +1,5 @@
 import { writable, derived } from 'svelte/store';
+import { getTokenCount } from './utils/tokenizer.js';
 
 // Folder state
 export const folderName = writable("");
@@ -12,7 +13,7 @@ export const recentFolders = writable([]);
 export const explorerFilter = writable('');
 export const includeGoal = writable(false);
 export const goalText = writable('');
-export const includeStructure = writable(true);
+export const includeStructure = writable(false);
 export const removeComments = writable(false);
 export const minifyOutput = writable(false);
 
@@ -37,7 +38,7 @@ export const totalSelectedSize = derived(
 
 export const totalSelectedTokens = derived(
     totalSelectedSize,
-    ($size) => Math.ceil($size / 4)
+    ($size) => Math.ceil($size / 4) // Selection is still estimation due to async nature of files
 );
 
 export const previewSize = derived(
@@ -46,7 +47,7 @@ export const previewSize = derived(
 );
 
 export const previewTokens = derived(
-    previewSize,
-    ($size) => Math.ceil($size / 4)
+    generatedOutput,
+    ($out) => getTokenCount($out)
 );
 

@@ -2,7 +2,7 @@
 	import { sourceBranch, targetBranch, codeReviewProjectName } from '../../codeReviewStore.js';
 	import { previewSize, previewTokens } from '../../promptStore.js';
 	import { selectFolder } from '../../utils/folderPicker.js';
-	import TokenPill from '../PromptBuilder/TokenPill.svelte';
+	import TokenPill from '../Common/TokenPill.svelte';
 	import Button from '../Common/Button.svelte';
 </script>
 
