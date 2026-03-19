@@ -20,7 +20,7 @@
     import { getGitDiff } from '../../utils/gitUtils.js';
     import TransformationPanel from '../PromptBuilder/TransformationPanel.svelte';
     import SkillsSelector from '../PromptBuilder/SkillsSelector.svelte';
-    import { savedSkills, selectedSkillsForPrompt } from '../../skillsStore.js';
+    import { savedSkills, selectedSkillsForPrompt, incrementSkillUsage } from '../../skillsStore.js';
     import Button from '../Common/Button.svelte';
     import tippy from 'tippy.js';
     import { getProjectStructure } from '../../utils/treeUtils.js';
@@ -64,6 +64,7 @@
                 res += `SKILLS INSTRUCTIONS:\n`;
                 selectedSkills.forEach((/** @type {any} */ skill) => {
                     res += `--- SKILL: ${skill.name} ---\n${skill.content}\n\n`;
+                    incrementSkillUsage(skill.id);
                 });
             }
 

@@ -83,7 +83,7 @@
 	import TokenPill from '../Common/TokenPill.svelte';
 	import Button from '../Common/Button.svelte';
 	import VirtualPromptEditor from '../Common/VirtualPromptEditor.svelte';
-	import { savedSkills, selectedSkillsForPrompt } from '../../skillsStore.js';
+	import { savedSkills, selectedSkillsForPrompt, incrementSkillUsage } from '../../skillsStore.js';
 
 	let isDirty = $state(false);
 	/** @type {any} */
@@ -117,6 +117,7 @@
 				res += `SKILLS INSTRUCTIONS:\n`;
 				selectedSkills.forEach((/** @type {any} */ skill) => {
 					res += `--- SKILL: ${skill.name} ---\n${skill.content}\n\n`;
+					incrementSkillUsage(skill.id);
 				});
 			}
 

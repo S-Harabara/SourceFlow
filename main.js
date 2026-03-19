@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { initDb, getSkills, addSkill, updateSkill, deleteSkill, incrementUsage, bulkAddSkills } from './db.js';
 
 const execAsync = promisify(exec);
 
@@ -250,6 +251,31 @@ ipcMain.handle('read-file', async (event, { filePath, projectPath }) => {
     return await fs.readFile(fullPath, 'utf8');
 });
 
+// Database IPC Handlers
+ipcMain.handle('db:get-skills', async (event, { sortField, sortOrder }) => {
+    return getSkills(sortField, sortOrder);
+});
+
+ipcMain.handle('db:add-skill', async (event, skill) => {
+    return addSkill(skill);
+});
+
+ipcMain.handle('db:update-skill', async (event, { id, patch }) => {
+    return updateSkill(id, patch);
+});
+
+ipcMain.handle('db:delete-skill', async (event, id) => {
+    return deleteSkill(id);
+});
+
+ipcMain.handle('db:increment-usage', async (event, id) => {
+    return incrementUsage(id);
+});
+
+ipcMain.handle('db:bulk-add-skills', async (event, skills) => {
+    return bulkAddSkills(skills);
+});
+
 app.whenReady().then(() => {
     // // 1. Grant general file system access
     // session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
@@ -272,6 +298,7 @@ app.whenReady().then(() => {
     //     callback('allow'); 
     // });
 
+    initDb();
     createWindow();
 
     app.on('activate', () => {

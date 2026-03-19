@@ -1,5 +1,5 @@
 <script>
-    import { savedSkills, favoriteSkillIds, addSkill, removeSkill, toggleFavorite, updateSkill } from '../skillsStore.js';
+    import { savedSkills, favoriteSkillIds, addSkill, removeSkill, toggleFavorite, updateSkill, setSortConfig, skillSortConfig } from '../skillsStore.js';
     import { fetchSkillFromUrl, parseSkillFile } from '../utils/skillsFetcher.js';
     import { fade, slide } from 'svelte/transition';
     import Button from '../components/Common/Button.svelte';
@@ -90,8 +90,13 @@
             description: createDescription.trim() || 'Custom skill',
             content: createDescription.trim(),
             sourceUrl: 'custom://' + id,
+            author: 'Me',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            usage_count: 0,
             isLocal: false,
             isCustom: true,
+            is_favorite: 0,
         };
         addSkill(skill);
         createTitle = '';
@@ -127,6 +132,9 @@
                         if (skill.name === 'unknown-skill') {
                             skill.name = file.name.replace('.md', '');
                         }
+                        skill.author = 'Local';
+                        skill.usage_count = 0;
+                        skill.is_favorite = 0;
                         addSkill(skill);
                     };
                     reader.readAsText(file);
@@ -238,6 +246,30 @@
                 on:click={() => activeTab = 'create'}>
                 <i class="fas fa-pen-nib mr-2"></i> Create My Skill
             </button>
+            <div class="flex-grow"></div>
+            {#if activeTab === 'library'}
+                <div class="flex items-center gap-2 pb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sort by:</span>
+                    <select 
+                        class="bg-transparent border-none text-xs font-bold text-gray-600 dark:text-gray-400 outline-none cursor-pointer focus:ring-0"
+                        value={$skillSortConfig.field}
+                        on:change={(e) => setSortConfig(/** @type {HTMLSelectElement} */(e.target).value, $skillSortConfig.order)}
+                    >
+                        <option value="created_at">Date Created</option>
+                        <option value="updated_at">Recently Edited</option>
+                        <option value="name">Name</option>
+                        <option value="author">Author</option>
+                        <option value="usage_count">Usage Count</option>
+                    </select>
+                    <button 
+                        class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                        on:click={() => setSortConfig($skillSortConfig.field, $skillSortConfig.order === 'ASC' ? 'DESC' : 'ASC')}
+                        title={$skillSortConfig.order === 'ASC' ? 'Ascending' : 'Descending'}
+                    >
+                        <i class="fas {$skillSortConfig.order === 'ASC' ? 'fa-sort-amount-up-alt' : 'fa-sort-amount-down'}"></i>
+                    </button>
+                </div>
+            {/if}
         </div>
 
         <!-- Tab Content -->
@@ -266,20 +298,19 @@
                                         <div class="w-10 h-10 rounded-xl {skill.isCustom ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-500' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-500'} flex items-center justify-center shrink-0">
                                             <i class="fas {skill.isCustom ? 'fa-pen-nib' : 'fa-bolt'} text-lg"></i>
                                         </div>
-                                        <div>
+                                         <div>
                                             <h4 class="font-bold text-sm">{skill.name}</h4>
                                             <div class="flex items-center gap-1.5 mt-0.5">
+                                                <span class="text-[9px] font-bold text-gray-400">by {skill.author || 'Unknown'}</span>
                                                 {#if skill.isLocal}
-                                                    <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500">Local File</span>
+                                                    <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500">Local</span>
                                                 {/if}
                                                 {#if skill.isCustom}
                                                     <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/40 rounded text-purple-600 dark:text-purple-400">Custom</span>
                                                 {/if}
-                                                {#if skill.linkedFiles && skill.linkedFiles.length > 0}
-                                                    <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-green-600 dark:text-green-400">
-                                                        <i class="fas fa-link mr-0.5"></i>{skill.linkedFiles.length} linked
-                                                    </span>
-                                                {/if}
+                                                <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400">
+                                                    <i class="fas fa-chart-line mr-1"></i>{skill.usage_count || 0}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
