@@ -6,7 +6,8 @@
 	const navItems = [
 		{ id: 'promptBuilder', label: 'Prompt Builder', icon: 'fas fa-hammer' },
 		{ id: 'codeReview', label: 'Code Review', icon: 'fas fa-code-pull-request' },
-		{ id: 'skillsLibrary', label: 'Skills Library', icon: 'fa-solid fa-splotch' }
+		{ id: 'skillsLibrary', label: 'Skills Library', icon: 'fa-solid fa-splotch' },
+		{ id: 'importExport', label: 'Import/Export', icon: 'fas fa-file-export' }
 	];
 
 	function toggleTheme() {
@@ -27,7 +28,7 @@
 			<i class="fas fa-microchip"></i>
 		</div>
 		<h1
-			class="font-black tracking-tight text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300"
+			class="font-black tracking-tight text-lg bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300"
 		>
 			SourceFlow
 		</h1>
@@ -52,9 +53,9 @@
          We can render a `<slot />` or conditionally render based on the view. -->
 
 	{#if $currentView === 'promptBuilder'}
-		<div class="flex-grow flex flex-col gap-6 overflow-hidden">
+		<div class="grow flex flex-col gap-6 overflow-hidden">
 			<div id="sidebar-filters-slot"></div>
-			<div id="sidebar-recent-slot" class="flex-grow overflow-hidden flex flex-col"></div>
+			<div id="sidebar-recent-slot" class="grow overflow-hidden flex flex-col"></div>
 		</div>
 	{/if}
 

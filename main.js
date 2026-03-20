@@ -276,6 +276,34 @@ ipcMain.handle('db:bulk-add-skills', async (event, skills) => {
     return bulkAddSkills(skills);
 });
 
+// File IPC Handlers
+ipcMain.handle('file:save-dialog', async (event, { defaultPath, filters }) => {
+    const result = await dialog.showSaveDialog({
+        defaultPath,
+        filters
+    });
+    return result;
+});
+
+ipcMain.handle('file:open-dialog', async (event, { filters }) => {
+    const result = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters
+    });
+    return result;
+});
+
+ipcMain.handle('file:read-file', async (event, { filePath }) => {
+    const fs = await import('fs/promises');
+    return await fs.readFile(filePath, 'utf8');
+});
+
+ipcMain.handle('file:write-file', async (event, { filePath, content }) => {
+    const fs = await import('fs/promises');
+    await fs.writeFile(filePath, content, 'utf8');
+    return true;
+});
+
 app.whenReady().then(() => {
     // // 1. Grant general file system access
     // session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
